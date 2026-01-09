@@ -22,6 +22,8 @@ import org.apache.flink.api.java.utils.MultipleParameterTool;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.core.execution.JobClient;
+import org.apache.flink.streaming.api.CheckpointingMode;
+import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.util.Preconditions;
 import org.apache.flink.util.StringUtils;
@@ -165,7 +167,28 @@ public class CdcTools {
             env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(configuration);
 
             // 1. 开启周期性Checkpoint，间隔30秒（本地调试可缩短，如5秒=5000ms）
-            env.enableCheckpointing(30000);
+            env.enableCheckpointing(30000); // 改为 60 秒
+
+
+            // 2. 配置 Checkpoint 存储路径（推荐）
+            CheckpointConfig checkpointConfig = env.getCheckpointConfig();
+
+            // 设置 checkpoint 存储目录（本地文件系统）
+            checkpointConfig.setCheckpointStorage("file:///D:/opt/flink-checkpoints");
+
+            // 任务取消时保留 checkpoint（可选，调试时建议设置）
+//            checkpointConfig.setExternalizedCheckpointCleanup(
+//                    CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION
+//            );
+
+            // 设置 checkpoint 模式为精确一次（默认）
+            // checkpointConfig.setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+
+            // checkpoint 超时时间（可选）
+            checkpointConfig.setCheckpointTimeout(60000); // 60秒
+
+            // 允许的最大并发 checkpoint 数量
+            checkpointConfig.setMaxConcurrentCheckpoints(1);
         }
         databaseSync
                 .setEnv(env)

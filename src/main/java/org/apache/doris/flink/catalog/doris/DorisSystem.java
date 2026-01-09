@@ -98,6 +98,7 @@ public class DorisSystem implements Serializable {
     }
 
     public void createTable(TableSchema schema) {
+        // 这里才是真正建表语句方言转换
         String ddl = buildCreateTableDDL(schema);
         LOG.info("Create table with ddl:{}", ddl);
         execute(ddl);
@@ -106,6 +107,7 @@ public class DorisSystem implements Serializable {
     public void execute(String sql) {
         try (Connection connection = jdbcConnectionProvider.getOrEstablishConnection();
                 Statement statement = connection.createStatement()) {
+            // 这里直接用的连接建的表
             statement.execute(sql);
         } catch (Exception e) {
             LOG.error("SQL query could not be executed: {}", sql, e);

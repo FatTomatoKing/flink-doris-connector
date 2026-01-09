@@ -1,0 +1,34 @@
+mysql-sync-database
+--database zard_cdap_doris
+--mysql-conf hostname=192.168.8.38
+--mysql-conf port=3306
+--mysql-conf username=suyh_repl
+--mysql-conf server-time-zone=UTC
+--mysql-conf password=suyh_repl
+--mysql-conf database-name=suyh_cdap_cds
+--including-tables "projec|rate"
+--sink-conf fenodes=192.168.8.237:8030
+--sink-conf username=root
+--sink-conf password=doris@2023
+--sink-conf jdbc-url=jdbc:mysql://192.168.8.237:9030
+--sink-conf sink.label-prefix=label_zard_cdap_mysql
+--sink-conf sink.batch.size=100
+--sink-conf sink.batch.interval=1000
+--table-conf replication_num=1
+
+
+StreamExecutionEnvironment env =
+                Objects.nonNull(flinkEnvironmentForTesting)
+                        ? flinkEnvironmentForTesting
+                        : StreamExecutionEnvironment.getExecutionEnvironment();
+        if (true) {
+            // suyh - 本地测试 使用 WebUI
+            Configuration configuration = new Configuration();
+            configuration.set(RestOptions.BIND_PORT, "8082");
+            configuration.setString("pipeline.operator-chaining.enabled", "false");
+            configuration.setString("parallelism.default", "1");
+            env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(configuration);
+
+            // 1. 开启周期性Checkpoint，间隔30秒（本地调试可缩短，如5秒=5000ms）
+            env.enableCheckpointing(30000);
+        }
